@@ -26,7 +26,7 @@ class ProjectCreateView(LoginRequiredMixin, View):
     def get(self, request):
         form = ProjectForm()
         return render(request, 'projects/create-project.html', {'form': form, 'is_edit': False})
-    
+
     def post(self, request):
         form = ProjectForm(request.POST)
         if form.is_valid():
@@ -45,7 +45,7 @@ class ProjectEditView(LoginRequiredMixin, View):
             return redirect(f'/projects/{pk}/')
         form = ProjectForm(instance=project)
         return render(request, 'projects/create-project.html', {'form': form, 'is_edit': True})
-    
+
     def post(self, request, pk):
         project = get_object_or_404(Project, pk=pk)
         if project.owner != request.user:

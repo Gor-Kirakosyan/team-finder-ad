@@ -10,7 +10,7 @@ class ProjectForm(forms.ModelForm):
         widgets = {
             'status': forms.Select(choices=Project.STATUS_CHOICES),
         }
-    
+
     def clean_github_url(self):
         url = self.cleaned_data.get('github_url')
         if url and 'github.com' not in url:
