@@ -12,7 +12,8 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_("Фамилия должна быть указана"))
 
         email = self.normalize_email(email)
-        user = self.model(email=email, name=name, surname=surname, **extra_fields)
+        user = self.model(email=email, name=name,
+                          surname=surname, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -25,6 +26,7 @@ class CustomUserManager(BaseUserManager):
         if extra_fields.get("is_staff") is not True:
             raise ValueError(_("Суперпользователь должен иметь is_staff=True"))
         if extra_fields.get("is_superuser") is not True:
-            raise ValueError(_("Суперпользователь должен иметь is_superuser=True"))
+            raise ValueError(
+                _("Суперпользователь должен иметь is_superuser=True"))
 
         return self.create_user(email, name, surname, password, **extra_fields)

@@ -55,7 +55,8 @@ class EditProfileView(LoginRequiredMixin, View):
         return render(request, 'users/edit_profile.html', {'form': form})
 
     def post(self, request):
-        form = EditProfileForm(request.POST, request.FILES, instance=request.user)
+        form = EditProfileForm(
+            request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
             return redirect(f'/users/{request.user.id}/')

@@ -11,10 +11,12 @@ class Project(models.Model):
     ]
 
     name = models.CharField(verbose_name="название проекта", max_length=200)
-    description = models.TextField(verbose_name="описание проекта", blank=True, null=True)
+    description = models.TextField(
+        verbose_name="описание проекта", blank=True, null=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name="автор проекта",
                               on_delete=models.CASCADE, related_name="owned_projects")
-    created_at = models.DateTimeField(verbose_name="дата создания проекта", default=timezone.now)
+    created_at = models.DateTimeField(
+        verbose_name="дата создания проекта", default=timezone.now)
     github_url = models.URLField(verbose_name="ссылка на GitHub",
                                  blank=True, null=True, validators=[URLValidator()])
     status = models.CharField(verbose_name="статус проекта", max_length=6,

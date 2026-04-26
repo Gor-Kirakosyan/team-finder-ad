@@ -34,7 +34,8 @@ class EditProfileForm(forms.ModelForm):
             if phone.startswith('8'):
                 phone = '+7' + phone[1:]
             if User.objects.exclude(pk=self.instance.pk).filter(phone=phone).exists():
-                raise ValidationError("Пользователь с таким номером телефона уже существует")
+                raise ValidationError(
+                    "Пользователь с таким номером телефона уже существует")
         return phone
 
     def clean_github_url(self):

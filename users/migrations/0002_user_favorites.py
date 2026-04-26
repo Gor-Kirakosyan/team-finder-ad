@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='favorites',
-            field=models.ManyToManyField(blank=True, related_name='favorited_by', to='projects.project', verbose_name='избранные проекты'),
+            field=models.ManyToManyField(
+                blank=True, related_name='favorited_by', to='projects.project', verbose_name='избранные проекты'),
         ),
     ]

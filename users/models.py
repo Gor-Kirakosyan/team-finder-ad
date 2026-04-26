@@ -52,7 +52,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     name = models.CharField(verbose_name="имя", max_length=124)
     surname = models.CharField(verbose_name="фамилия", max_length=124)
-    avatar = models.ImageField(verbose_name="аватар", upload_to="avatars/", blank=True, null=True)
+    avatar = models.ImageField(
+        verbose_name="аватар", upload_to="avatars/", blank=True, null=True)
     phone = models.CharField(
         verbose_name="номер телефона",
         max_length=12,
@@ -62,10 +63,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     github_url = models.URLField(verbose_name="ссылка на GitHub",
                                  blank=True, null=True, validators=[URLValidator()])
-    about = models.TextField(verbose_name="описание профиля", max_length=256, blank=True, null=True)
-    is_active = models.BooleanField(verbose_name="активный пользователь", default=True)
+    about = models.TextField(
+        verbose_name="описание профиля", max_length=256, blank=True, null=True)
+    is_active = models.BooleanField(
+        verbose_name="активный пользователь", default=True)
     is_staff = models.BooleanField(verbose_name="администратор", default=False)
-    date_joined = models.DateTimeField(verbose_name="дата регистрации", default=timezone.now)
+    date_joined = models.DateTimeField(
+        verbose_name="дата регистрации", default=timezone.now)
     favorites = models.ManyToManyField(
         'projects.Project',
         verbose_name="избранные проекты",
@@ -88,8 +92,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.avatar:
-            avatar_content = generate_avatar_from_initials(self.name, self.surname)
-            self.avatar.save(f"avatar_{self.name}_{self.surname}.png", avatar_content, save=False)
+            avatar_content = generate_avatar_from_initials(
+                self.name, self.surname)
+            self.avatar.save(
+                f"avatar_{self.name}_{self.surname}.png", avatar_content, save=False)
 
         if self.phone and self.phone.startswith("8"):
             self.phone = "+7" + self.phone[1:]
