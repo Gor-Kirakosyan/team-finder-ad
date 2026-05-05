@@ -22,36 +22,37 @@
                     <img src="{% static 'images/default-avatar.png' %}" alt="Аватар по умолчанию">
                 {% endif %}
                 <div class="overlay">
-                    <button type="button" onclick="document.getElementById('id_avatar').click()">Заменить</button>
+                    <button type="button" class="change-avatar-btn" onclick="document.getElementById('id_avatar').click();">Заменить аватар</button>
                 </div>
             </div>
-            {{ form.avatar }}
+            <!-- Скрываем стандартный вывод поля avatar -->
+            <input type="file" name="avatar" id="id_avatar" accept="image/*" style="display: none;">
         </div>
 
         <div class="form-row">
             <div class="form-field">
-                {{ form.name.label_tag }}
-                {{ form.name }}
+                <label for="id_name">Имя:</label>
+                <input type="text" name="name" id="id_name" class="form-input" value="{{ user.name }}" required>
             </div>
             <div class="form-field">
-                {{ form.surname.label_tag }}
-                {{ form.surname }}
+                <label for="id_surname">Фамилия:</label>
+                <input type="text" name="surname" id="id_surname" class="form-input" value="{{ user.surname }}" required>
             </div>
         </div>
 
         <div class="form-field">
-            {{ form.about.label_tag }}
-            {{ form.about }}
+            <label for="id_about">О себе:</label>
+            <textarea name="about" id="id_about" class="form-textarea" rows="4">{{ user.about|default:'' }}</textarea>
         </div>
 
         <div class="form-row">
             <div class="form-field">
-                {{ form.phone.label_tag }}
-                {{ form.phone }}
+                <label for="id_phone">Телефон:</label>
+                <input type="text" name="phone" id="id_phone" class="form-input" value="{{ user.phone|default:'' }}">
             </div>
             <div class="form-field">
-                {{ form.github_url.label_tag }}
-                {{ form.github_url }}
+                <label for="id_github_url">GitHub:</label>
+                <input type="url" name="github_url" id="id_github_url" class="form-input" value="{{ user.github_url|default:'' }}">
             </div>
         </div>
 

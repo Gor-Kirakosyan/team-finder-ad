@@ -12,15 +12,35 @@
     <h2>Регистрация</h2>
     <form method="post">
         {% csrf_token %}
-        <div class="name-fields">
-            <div>{{ form.name.label_tag }} {{ form.name }}</div>
-            <div>{{ form.surname.label_tag }} {{ form.surname }}</div>
+
+        {{ form.non_field_errors }}
+
+        <div style="display: flex; gap: 20px;">
+            <div class="form-field" style="flex: 1;">
+                <label for="id_name">Имя:</label>
+                <input type="text" name="name" id="id_name" class="form-input" required>
+                {{ form.name.errors }}
+            </div>
+
+            <div class="form-field" style="flex: 1;">
+                <label for="id_surname">Фамилия:</label>
+                <input type="text" name="surname" id="id_surname" class="form-input" required>
+                {{ form.surname.errors }}
+            </div>
         </div>
-        {{ form.email.label_tag }} {{ form.email }}
-        {{ form.password.label_tag }} {{ form.password }}
-        {% for error in form.errors.values %}
-        <p style="color: red;">{{error}}</p>
-        {% endfor %}
+
+        <div class="form-field">
+            <label for="id_email">Email:</label>
+            <input type="email" name="email" id="id_email" class="form-input" required>
+            {{ form.email.errors }}
+        </div>
+
+        <div class="form-field">
+            <label for="id_password">Пароль:</label>
+            <input type="password" name="password" id="id_password" class="form-input" required>
+            {{ form.password.errors }}
+        </div>
+
         <button type="submit">Зарегистрироваться</button>
     </form>
     <p class="auth-link">Уже есть аккаунт? <a href="{% url 'users:login' %}">Войти</a></p>
