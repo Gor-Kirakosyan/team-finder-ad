@@ -1,7 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.core.exceptions import ValidationError
+
 from .models import User
+from .utils import normalize_phone, validate_github_url
 
 
 class RegisterForm(forms.ModelForm):
@@ -53,7 +55,7 @@ class EditProfileForm(forms.ModelForm):
             'surname': forms.TextInput(attrs={'class': 'form-input'}),
             'avatar': forms.ClearableFileInput(
                 attrs={'class': 'form-file', 'style': 'display: none;'}
-                ),
+            ),
             'about': forms.Textarea(attrs={'rows': 4, 'class': 'form-textarea'}),
             'phone': forms.TextInput(attrs={'class': 'form-input'}),
             'github_url': forms.URLInput(attrs={'class': 'form-input'}),
@@ -70,19 +72,15 @@ class EditProfileForm(forms.ModelForm):
     def clean_phone(self):
         phone = self.cleaned_data.get('phone')
         if phone:
-            if phone.startswith('8'):
-                phone = '+7' + phone[1:]
+            phone = normalize_phone(phone)
             if User.objects.exclude(pk=self.instance.pk).filter(phone=phone).exists():
                 raise ValidationError(
-                    "Пользователь с таким номером телефона уже существует"
-                )
+                    "Пользователь с таким номером телефона уже существует")
         return phone
 
     def clean_github_url(self):
         url = self.cleaned_data.get('github_url')
-        if url and 'github.com' not in url:
-            raise ValidationError("Ссылка должна вести на GitHub")
-        return url
+        return validate_github_url(url)
 
 
 class ChangePasswordForm(PasswordChangeForm):

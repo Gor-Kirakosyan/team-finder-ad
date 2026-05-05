@@ -2,23 +2,31 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.http import JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator
+from http import HTTPStatus
+
 from .models import Project
 from .forms import ProjectForm
 
 
+def paginate_queryset(request, queryset, items_per_page=12):
+    from django.core.paginator import Paginator
+    paginator = Paginator(queryset, items_per_page)
+    page_number = request.GET.get('page')
+    return paginator.get_page(page_number)
+
+
 class ProjectListView(View):
     def get(self, request):
-        projects = Project.objects.all().order_by('-created_at')
-        paginator = Paginator(projects, 12)
-        page_number = request.GET.get('page')
-        projects_page = paginator.get_page(page_number)
+        projects = Project.objects.select_related(
+            'owner').order_by('-created_at')
+        projects_page = paginate_queryset(request, projects)
         return render(request, 'projects/project_list.html', {'projects': projects_page})
 
 
 class ProjectDetailView(View):
     def get(self, request, pk):
-        project = get_object_or_404(Project, pk=pk)
+        project = get_object_or_404(
+            Project.objects.select_related('owner'), pk=pk)
         return render(request, 'projects/project-details.html', {'project': project})
 
 
@@ -34,7 +42,7 @@ class ProjectCreateView(LoginRequiredMixin, View):
             project.owner = request.user
             project.save()
             project.participants.add(request.user)
-            return redirect(f'/projects/{project.id}/')
+            return redirect('project_detail', pk=project.id)
         return render(request, 'projects/create-project.html', {'form': form, 'is_edit': False})
 
 
@@ -42,35 +50,35 @@ class ProjectEditView(LoginRequiredMixin, View):
     def get(self, request, pk):
         project = get_object_or_404(Project, pk=pk)
         if project.owner != request.user:
-            return redirect(f'/projects/{pk}/')
+            return redirect('project_detail', pk=pk)
         form = ProjectForm(instance=project)
         return render(request, 'projects/create-project.html', {'form': form, 'is_edit': True})
 
     def post(self, request, pk):
         project = get_object_or_404(Project, pk=pk)
         if project.owner != request.user:
-            return redirect(f'/projects/{pk}/')
+            return redirect('project_detail', pk=pk)
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
             form.save()
-            return redirect(f'/projects/{pk}/')
+            return redirect('project_detail', pk=pk)
         return render(request, 'projects/create-project.html', {'form': form, 'is_edit': True})
 
 
 class ProjectCompleteView(LoginRequiredMixin, View):
     def post(self, request, pk):
         project = get_object_or_404(Project, pk=pk)
-        if request.user == project.owner and project.status == 'open':
-            project.status = 'closed'
+        if request.user == project.owner and project.status == Project.STATUS_OPEN:
+            project.status = Project.STATUS_CLOSED
             project.save()
-            return JsonResponse({'status': 'ok', 'project_status': 'closed'})
-        return JsonResponse({'status': 'error'}, status=400)
+            return JsonResponse({'status': 'ok', 'project_status': project.status})
+        return JsonResponse({'status': 'error'}, status=HTTPStatus.BAD_REQUEST)
 
 
 class ToggleFavoriteView(LoginRequiredMixin, View):
     def post(self, request, pk):
         project = get_object_or_404(Project, pk=pk)
-        if project in request.user.favorites.all():
+        if request.user.favorites.filter(pk=project.pk).exists():
             request.user.favorites.remove(project)
             favorited = False
         else:
@@ -82,7 +90,7 @@ class ToggleFavoriteView(LoginRequiredMixin, View):
 class ToggleParticipateView(LoginRequiredMixin, View):
     def post(self, request, pk):
         project = get_object_or_404(Project, pk=pk)
-        if request.user in project.participants.all():
+        if project.participants.filter(pk=request.user.pk).exists():
             project.participants.remove(request.user)
         else:
             project.participants.add(request.user)
@@ -92,7 +100,5 @@ class ToggleParticipateView(LoginRequiredMixin, View):
 class FavoriteProjectsView(LoginRequiredMixin, View):
     def get(self, request):
         projects = request.user.favorites.all().order_by('-created_at')
-        paginator = Paginator(projects, 12)
-        page_number = request.GET.get('page')
-        projects_page = paginator.get_page(page_number)
+        projects_page = paginate_queryset(request, projects)
         return render(request, 'projects/favorite_projects.html', {'projects': projects_page})

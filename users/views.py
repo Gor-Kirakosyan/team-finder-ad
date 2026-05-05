@@ -3,9 +3,18 @@ from django.views import View
 from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
-from django.core.paginator import Paginator
+from django.urls import reverse
+
 from .models import User
 from .forms import RegisterForm, LoginForm, EditProfileForm
+
+from projects.views import paginate_queryset
+
+
+FILTER_OWNERS_OF_FAVORITE_PROJECTS = 'owners-of-favorite-projects'
+FILTER_OWNERS_OF_PARTICIPATING_PROJECTS = 'owners-of-participating-projects'
+FILTER_INTERESTED_IN_MY_PROJECTS = 'interested-in-my-projects'
+FILTER_PARTICIPANTS_OF_MY_PROJECTS = 'participants-of-my-projects'
 
 
 class RegisterView(View):
@@ -18,7 +27,7 @@ class RegisterView(View):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('/projects/list/')
+            return redirect(reverse('project_list'))
         return render(request, 'users/register.html', {'form': form})
 
 
@@ -32,7 +41,7 @@ class LoginView(View):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('/projects/list/')
+            return redirect(reverse('project_list'))
         form.add_error(None, "Неверный имейл или пароль")
         return render(request, 'users/login.html', {'form': form})
 
@@ -40,7 +49,7 @@ class LoginView(View):
 class LogoutView(View):
     def get(self, request):
         logout(request)
-        return redirect('/projects/list/')
+        return redirect(reverse('project_list'))
 
 
 class UserDetailView(View):
@@ -59,7 +68,7 @@ class EditProfileView(LoginRequiredMixin, View):
             request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
-            return redirect(f'/users/{request.user.id}/')
+            return redirect(reverse('user_detail', kwargs={'pk': request.user.id}))
         return render(request, 'users/edit_profile.html', {'form': form})
 
 
@@ -67,7 +76,7 @@ class ChangePasswordView(LoginRequiredMixin, PasswordChangeView):
     template_name = 'users/change_password.html'
 
     def get_success_url(self):
-        return f'/users/{self.request.user.id}/'
+        return reverse('user_detail', kwargs={'pk': self.request.user.id})
 
 
 class UserListView(View):
@@ -77,22 +86,24 @@ class UserListView(View):
         active_filter = filter_param
 
         if request.user.is_authenticated and filter_param:
-            if filter_param == 'owners-of-favorite-projects':
+            if filter_param == FILTER_OWNERS_OF_FAVORITE_PROJECTS:
                 users = User.objects.filter(
-                    owned_projects__in=request.user.favorites.all()).distinct()
-            elif filter_param == 'owners-of-participating-projects':
+                    owned_projects__in=request.user.favorites.all()
+                ).distinct()
+            elif filter_param == FILTER_OWNERS_OF_PARTICIPATING_PROJECTS:
                 users = User.objects.filter(
-                    owned_projects__in=request.user.participated_projects.all()).distinct()
-            elif filter_param == 'interested-in-my-projects':
+                    owned_projects__in=request.user.participated_projects.all()
+                ).distinct()
+            elif filter_param == FILTER_INTERESTED_IN_MY_PROJECTS:
                 users = User.objects.filter(
-                    favorites__in=request.user.owned_projects.all()).distinct()
-            elif filter_param == 'participants-of-my-projects':
+                    favorites__in=request.user.owned_projects.all()
+                ).distinct()
+            elif filter_param == FILTER_PARTICIPANTS_OF_MY_PROJECTS:
                 users = User.objects.filter(
-                    participated_projects__in=request.user.owned_projects.all()).distinct()
+                    participated_projects__in=request.user.owned_projects.all()
+                ).distinct()
 
-        paginator = Paginator(users, 12)
-        page_number = request.GET.get('page')
-        participants = paginator.get_page(page_number)
+        participants = paginate_queryset(request, users)
 
         return render(request, 'users/participants.html', {
             'participants': participants,
